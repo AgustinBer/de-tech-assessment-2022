@@ -2,15 +2,14 @@
 
 This repository contains a solution for building a simple and scalable data lake and data warehouse for door2door. The data lake and data warehouse enable the BI team to analyze data collected from the vehicles in door2door's fleet in real-time via GPS sensors.
 
+![alt text](https://i.gyazo.com/608680a07bf2863fc0c7d8e92728851d.png)
+
 ## Folder structure
 
 The repository has the following folder structure:
 
 ```
 ├── data
-│ ├── raw
-│ └── processed
-├── dags
 ├── src
 │ ├── fetch_data.py
 │ ├── process_data.py
