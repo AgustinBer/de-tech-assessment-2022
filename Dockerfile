@@ -1,11 +1,7 @@
-FROM python:3.8
 
-# Install the required libraries
-RUN pip install boto3 psycopg2 pandas
-
-# Copy the application code and dependencies to the container
-COPY . /app
+FROM python:3.9
 WORKDIR /app
-
-# Set the entrypoint of the container to the main script
-ENTRYPOINT ["python", "main.py"]
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
