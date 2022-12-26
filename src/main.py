@@ -1,5 +1,4 @@
-import airflow
-from dag import dag
+from main_dag import dag
 
 if __name__ == "__main__":
 

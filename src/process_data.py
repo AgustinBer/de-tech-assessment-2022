@@ -2,15 +2,13 @@ import json
 import pandas as pd
 import glob
 
-import os
-
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 def process_data(**kwargs):
     # Initialize an empty list to store the processed data
     processed_data = []
-    
+
     execution_date = kwargs["execution_date"]
 
     # Calculate the date for the previous day
@@ -24,9 +22,9 @@ def process_data(**kwargs):
         # Read the file and parse the JSON
         with open(f"data/{filename}") as f:
             contents = f.read()
-            
-        json_strings = contents.split('\n')
-        json_strings = [x for x in json_strings if x!='']
+
+        json_strings = contents.split("\n")
+        json_strings = [x for x in json_strings if x != ""]
 
         # Iterate over the events in the file
         for json_string in json_strings:

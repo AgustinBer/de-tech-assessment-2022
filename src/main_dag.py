@@ -1,10 +1,10 @@
-import airflow
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from fetch_data import fetch_data
 from process_data import process_data
 from store_data import store_data
 from transform_data import transform_data
+import os
 
 import datetime as dt
 
@@ -12,16 +12,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
 
 env_vars = {
-    "host":os.environ["REDSHIFT_HOST"],
-    "port":os.environ["REDSHIFT_PORT"],
-    "user":os.environ["REDSHIFT_USER"],
-    "password":os.environ["REDSHIFT_PASSWORD"],
-    "database":os.environ["REDSHIFT_DATABASE"],
-    "bucket":os.environ["S3_BUCKET"]
-    }
+    "host": os.environ["REDSHIFT_HOST"],
+    "port": os.environ["REDSHIFT_PORT"],
+    "user": os.environ["REDSHIFT_USER"],
+    "password": os.environ["REDSHIFT_PASSWORD"],
+    "database": os.environ["REDSHIFT_DATABASE"],
+    "bucket": os.environ["S3_BUCKET"],
+}
 
 
 # Default parameters for the DAG
@@ -37,7 +36,6 @@ dag = DAG(
     default_args=default_args,
     description="Data processing pipeline for door2door vehicle tracking data",
 )
-print("HEY")
 
 # Create the fetch_data Operator
 fetch_data_task = PythonOperator(
@@ -60,8 +58,6 @@ process_data_task = PythonOperator(
 )
 
 
-
-
 # Create the transform_data Operator
 transform_data_task = PythonOperator(
     task_id="transform_data",
@@ -82,7 +78,6 @@ store_data_task = PythonOperator(
     },
     dag=dag,
 )
-
 
 
 # Set up dependencies between the tasks
