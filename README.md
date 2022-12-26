@@ -6,20 +6,23 @@ This repository contains a solution for building a simple and scalable data lake
 
 The repository has the following folder structure:
 
+```
 ├── data
 │ ├── raw
 │ └── processed
 ├── dags
-├── scripts
+├── src
 │ ├── fetch_data.py
 │ ├── process_data.py
 │ ├── transform_data.py
 │ └── store_data.py
+| └── main_dag.py
+| └── main.py
 ├── Dockerfile
-├── main.py
 ├── README.md
 ├── requirements.txt
 └── tests.py
+```
 
 
 ## Data fetching process
@@ -95,7 +98,6 @@ For operating period events, the data column has the following structure:
 }
 
 The events table is denormalized to allow for efficient querying.
-
 
 
 ## Testing

@@ -1,20 +1,37 @@
 import json
 import pandas as pd
+import glob
+
+import os
+
+from datetime import datetime, timedelta
 
 
 def process_data(**kwargs):
     # Initialize an empty list to store the processed data
     processed_data = []
+    
+    execution_date = kwargs["execution_date"]
+
+    # Calculate the date for the previous day
+    yesterday = execution_date - timedelta(days=1)
+
+    # Format the date as a string in the format yyyy-mm-dd
+    yesterday_str = yesterday.strftime("%Y-%m-%d")
 
     # Iterate over the files in the data directory
-    for filename in os.listdir("data"):
+    for filename in glob.glob(f"data/{yesterday_str}*"):
         # Read the file and parse the JSON
         with open(f"data/{filename}") as f:
-            data = json.load(f)
+            contents = f.read()
+            
+        json_strings = contents.split('\n')
+        json_strings = [x for x in json_strings if x!='']
 
         # Iterate over the events in the file
-        for event in data:
+        for json_string in json_strings:
             # Extract the relevant fields from the event
+            event = json.loads(json_string)
             event_type = event["event"]
             entity = event["on"]
             timestamp = event["at"]

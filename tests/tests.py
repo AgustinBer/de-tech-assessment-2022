@@ -1,147 +1,57 @@
 import unittest
-import datetime
-import boto3
-import pandas as pd
-import mysql.connector
-import psycopg2
 
+from src.fetch_data import fetch_data
+from src.process_data import process_data
+from src.transform_data import transform_data
+from src.store_data import store_data
 
-class TestDataLakeDataWarehouse(unittest.TestCase):
-    def store_data(host, user, password, database, date, data, database_type):
-        # connect to Redshift
-        conn = psycopg2.connect(
-            host=host, user=user, password=password, database=database
-        )
-        cursor = conn.cursor()
-        # create the events table if it doesn't already exist
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS events (date DATE, event VARCHAR(255), on VARCHAR(255), at TIMESTAMP, data TEXT, organization_id VARCHAR(255))"""
-        )
-        # insert the data into the events table
-        for event in data:
-            cursor.execute(
-                """INSERT INTO events (date, event, on, at, data, organization_id) VALUES (%s, %s, %s, %s, %s, %s)""",
-                (
-                    date,
-                    event["event"],
-                    event["on"],
-                    event["at"],
-                    str(event["data"]),
-                    event["organization_id"],
-                ),
-            )
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-    def setUp(self):
-        # set up the test data and test environment
-        self.s3_client = boto3.client("s3")
-        self.s3_bucket = "test-bucket"
-        self.s3_prefix = "test-prefix"
-        self.mysql_host = "test-mysql-host"
-        self.mysql_user = "test-mysql-user"
-        self.mysql_password = "test-mysql-password"
-        self.mysql_database = "test-mysql-database"
-        self.redshift_host = "test-redshift-host"
-        self.redshift_user = "test-redshift-user"
-        self.redshift_password = "test-redshift-password"
-        self.redshift_database = "test-redshift-database"
-        self.date = datetime.datetime.now().strftime("%Y-%m-%d")
-        self.data = [
-            {
-                "event": "create",
-                "on": "vehicle",
-                "at": "2019-05-19T16:02:02Z",
-                "data": {
-                    "id": "v1",
-                    "location": {
-                        "lat": 50.1,
-                        "lng": 40.2,
-                        "at": "2019-05-19T16:02:02Z",
-                    },
-                },
-                "organization_id": "o1",
-            },
-            {
-                "event": "update",
-                "on": "vehicle",
-                "at": "2019-05-19T17:03:03Z",
-                "data": {
-                    "id": "v1",
-                    "location": {
-                        "lat": 51.2,
-                        "lng": 41.3,
-                        "at": "2019-05-19T17:03:03Z",
-                    },
-                },
-                "organization_id": "o1",
-            },
-            {
-                "event": "deregister",
-                "on": "vehicle",
-                "at": "2019-05-19T18:04:04Z",
-                "data": {
-                    "id": "v1",
-                    "location": {
-                        "lat": 52.4,
-                        "lng": 42.5,
-                        "at": "2019-05-19T18:04:04Z",
-                    },
-                },
-                "organization_id": "o1",
-            },
-        ]
-
+class TestDataPipeline(unittest.TestCase):
+    def test_fetch_data(self):
+        # Test that fetch_data returns a list of file names
+        file_names = fetch_data()
+        self.assertIsInstance(file_names, list)
+        
+        # Test that the list is not empty
+        self.assertGreater(len(file_names), 0)
+        
+        # Test that all items in the list are strings
+        for file_name in file_names:
+            self.assertIsInstance(file_name, str)
+    
+    def test_process_data(self):
+        # Test that process_data returns a list of dictionaries
+        data = process_data('some_file.json')
+        self.assertIsInstance(data, list)
+        
+        # Test that the list is not empty
+        self.assertGreater(len(data), 0)
+        
+        # Test that all items in the list are dictionaries
+        for item in data:
+            self.assertIsInstance(item, dict)
+    
+    def test_transform_data(self):
+        # Test that transform_data returns a DataFrame
+        df = transform_data([{'some': 'data'}])
+        self.assertIsInstance(df, pd.DataFrame)
+        
+        # Test that the DataFrame is not empty
+        self.assertGreater(len(df), 0)
+    
     def test_store_data(self):
-        # test the store_data function with MySQL
-        store_data(
-            self.mysql_host,
-            self.mysql_user,
-            self.mysql_password,
-            self.mysql_database,
-            self.date,
-            self.data,
-            "mysql",
-        )
-        # verify that the data has been stored in MySQL
-        conn = mysql.connector.connect(
-            host=self.mysql_host,
-            user=self.mysql_user,
-            password=self.mysql_password,
-            database=self.mysql_database,
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM events WHERE date = %s", (self.date,))
-        rows = cursor.fetchall()
-        self.assertEqual(len(rows), len(self.data))
-        cursor.close()
-        conn.close()
+        # Test that store_data inserts rows into the database
+        # First, get the current number of rows in the table
+        cur = conn.cursor()
+        cur.execute('SELECT COUNT(*) FROM events')
+        num_rows = cur.fetchone()[0]
+        
+        # Insert some data
+        df = pd.DataFrame([{'event': 'create', 'on': 'some_entity'}])
+        store_data(df)
+        
+        # Check that the number of rows has increased by one
+        cur.execute('SELECT COUNT(*) FROM events')
+        self.assertEqual(cur.fetchone()[0], num_rows + 1)
 
-        # test the store_data function with Redshift
-        store_data(
-            self.redshift_host,
-            self.redshift_user,
-            self.redshift_password,
-            self.redshift_database,
-            self.date,
-            self.data,
-            "redshift",
-        )
-        # verify that the data has been stored in Redshift
-        conn = psycopg2.connect(
-            host=self.redshift_host,
-            user=self.redshift_user,
-            password=self.redshift_password,
-            database=self.redshift_database,
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM events WHERE date = %s", (self.date,))
-        rows = cursor.fetchall()
-        self.assertEqual(len(rows), len(self.data))
-        cursor.close()
-        conn.close()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
